@@ -13,7 +13,7 @@
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-include { ONT-SAMPLESHEET-GENERATOR  } from './workflows/ont-samplesheet-generator'
+include { MAKE_ONT_SAMPLESHEET  } from './workflows/make_ont_samplesheet'
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     NAMED WORKFLOWS FOR PIPELINE
@@ -23,7 +23,7 @@ include { ONT-SAMPLESHEET-GENERATOR  } from './workflows/ont-samplesheet-generat
 //
 // WORKFLOW: Run main analysis pipeline depending on type of input
 //
-workflow DOHHNH0303_ONT-SAMPLESHEET-GENERATOR {
+workflow ONT_SAMPLESHEET_GENERATOR {
 
     take:
     samplesheet // channel: samplesheet read in from --input
@@ -33,7 +33,7 @@ workflow DOHHNH0303_ONT-SAMPLESHEET-GENERATOR {
     //
     // WORKFLOW: Run pipeline
     //
-    ONT-SAMPLESHEET-GENERATOR (
+    MAKE_ONT_SAMPLESHEET (
         samplesheet
     )
 }
@@ -50,7 +50,7 @@ workflow {
     //
     // WORKFLOW: Run main workflow
     //
-    DOHHNH0303_ONT-SAMPLESHEET-GENERATOR (
+    ONT_SAMPLESHEET_GENERATOR (
         params.input
     )
 }

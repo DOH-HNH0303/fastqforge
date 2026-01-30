@@ -10,7 +10,7 @@
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-workflow ONT-SAMPLESHEET-GENERATOR {
+workflow MAKE_ONT_SAMPLESHEET {
 
     take:
     ch_samplesheet // channel: samplesheet read in from --input
