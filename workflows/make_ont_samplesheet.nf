@@ -12,9 +12,15 @@
 
 workflow MAKE_ONT_SAMPLESHEET {
 
+
     take:
     ch_samplesheet // channel: samplesheet read in from --input
+
+    main:
+    // TODO: Add workflow logic here
+    ch_samplesheet.view()
 }
+
 
 /*
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

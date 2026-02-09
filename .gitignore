@@ -7,3 +7,6 @@ testing/
 testing*
 *.pyc
 null/
+/resultsworkflow/pipeline_info
+meta.fasta.csv
+meta.fastq.csv

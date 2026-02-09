@@ -1,62 +1,61 @@
 #!/usr/bin/env nextflow
-/*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    DOH-HNH0303/ont-samplesheet-generator
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    Github : https://github.com/DOH-HNH0303/ont-samplesheet-generator
-----------------------------------------------------------------------------------------
-*/
+
+nextflow.enable.dsl = 2
+
+// Parameters
+params.runid = null
+params.ont_bucket = null
+params.outdir = 'results'
+params.paired_illumina_reads = false
+params.fastq_files = null
 
 /*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    IMPORT FUNCTIONS / MODULES / SUBWORKFLOWS / WORKFLOWS
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-*/
+ * Import modules
+ */
+include { CREATE_ONT_SAMPLESHEET } from './modules/local/create_ont_samplesheet'
+include { EXTRACT_ILLUMINA_READS } from './modules/local/extract_illumina_reads'
+include { MERGE_SAMPLESHEETS } from './modules/local/merge_samplesheets'
 
-include { MAKE_ONT_SAMPLESHEET  } from './workflows/make_ont_samplesheet'
 /*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    NAMED WORKFLOWS FOR PIPELINE
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-*/
-
-//
-// WORKFLOW: Run main analysis pipeline depending on type of input
-//
-workflow ONT_SAMPLESHEET_GENERATOR {
-
-    take:
-    samplesheet // channel: samplesheet read in from --input
-
-    main:
-
-    //
-    // WORKFLOW: Run pipeline
-    //
-    MAKE_ONT_SAMPLESHEET (
-        samplesheet
-    )
-}
-/*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    RUN MAIN WORKFLOW
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-*/
-
+ * Main workflow
+ */
 workflow {
-
-    main:
-
-    //
-    // WORKFLOW: Run main workflow
-    //
-    ONT_SAMPLESHEET_GENERATOR (
-        params.input
+    // Validate required parameters
+    if (!params.runid) {
+        error "ERROR: --runid parameter is required"
+    }
+    if (!params.ont_bucket) {
+        error "ERROR: --ont_bucket parameter is required"
+    }
+    if (params.paired_illumina_reads && !params.fastq_files) {
+        error "ERROR: --fastq_files parameter is required when --paired_illumina_reads is true"
+    }
+    
+    // Create ONT samplesheet
+    ont_ch = CREATE_ONT_SAMPLESHEET(
+        params.runid,
+        params.ont_bucket
     )
+    
+    if (params.paired_illumina_reads) {
+        // Process Illumina reads if requested
+        meta_fastq_file = file(params.fastq_files, checkIfExists: true)
+        
+        illumina_ch = EXTRACT_ILLUMINA_READS(
+            ont_ch,
+            meta_fastq_file,
+            params.runid
+        )
+        
+        // Merge ONT and Illumina samplesheets
+        final_ch = MERGE_SAMPLESHEETS(
+            ont_ch,
+            illumina_ch
+        )
+        
+        final_ch | view { f -> "Final merged samplesheet created: ${f}" }
+    } else {
+        // ONT only mode - just display the ONT samplesheet
+        ont_ch | view { f -> "ONT samplesheet created: ${f}" }
+    }
 }
-
-/*
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    THE END
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-*/
