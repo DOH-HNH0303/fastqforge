@@ -16,6 +16,12 @@ include { CREATE_ONT_SAMPLESHEET } from './modules/local/create_ont_samplesheet'
 include { EXTRACT_ILLUMINA_READS } from './modules/local/extract_illumina_reads'
 include { MERGE_SAMPLESHEETS } from './modules/local/merge_samplesheets'
 
+
+
+/*Functions*/
+def fastq_file_path = file(params.fastq_files)
+
+
 /*
  * Main workflow
  */
@@ -39,7 +45,10 @@ workflow {
     
     if (params.paired_illumina_reads) {
         // Process Illumina reads if requested
-        meta_fastq_file = file(params.fastq_files, checkIfExists: true)
+        if (!fastq_file_path.exists()) {
+            error "ERROR: FASTQ metadata file does not exist: ${params.fastq_files}\nPlease check the file path and try again."
+        }
+meta_fastq_file = fastq_file_path
         
         illumina_ch = EXTRACT_ILLUMINA_READS(
             ont_ch,
