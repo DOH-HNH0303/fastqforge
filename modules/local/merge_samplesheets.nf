@@ -12,51 +12,46 @@ process MERGE_SAMPLESHEETS {
     """
     #!/usr/bin/env python3
     
-    import csv
-    
-    # Read ONT samplesheet
-    ont_data = {}
-    with open('${ont_samplesheet}', 'r') as f:
-        reader = csv.DictReader(f, delimiter='\\t')
-        for row in reader:
-            ont_data[row['sample']] = row['fastq']
-    
-    # Read Illumina reads
-    illumina_data = {}
-    with open('${illumina_reads}', 'r') as f:
-        reader = csv.DictReader(f, delimiter='\\t')
-        for row in reader:
-            illumina_data[row['sample']] = {
-                'fastq_1': row.get('fastq_1', ''),
-                'fastq_2': row.get('fastq_2', '')
-            }
-    
-    # Merge and write output
-    with open('samplesheet.csv', 'w') as f:
-        f.write("sample\\tfastq_ont\\tfastq_1\\tfastq_2\\n")
-        
-        # Get all samples (union of ONT and Illumina)
-        all_samples = sorted(set(ont_data.keys()) | set(illumina_data.keys()))
-        
-        for sample in all_samples:
-            ont_path = ont_data.get(sample, '')
-            illumina = illumina_data.get(sample, {'fastq_1': '', 'fastq_2': ''})
-            
-            f.write(f"{sample}\\t{ont_path}\\t{illumina['fastq_1']}\\t{illumina['fastq_2']}\\n")
-    
-    # Display result
-    print("=== Final Merged Samplesheet ===")
-    with open('samplesheet.csv', 'r') as f:
-        for i, line in enumerate(f):
-            if i < 10:
-                print(line.rstrip())
-            else:
-                break
-        if len(all_samples) > 9:
-            print(f"... ({len(all_samples)} total samples)")
-    
-    print(f"\\nCreated merged samplesheet with {len(all_samples)} samples")
-    print(f"  - ONT reads: {len(ont_data)} samples")
-    print(f"  - Illumina reads: {len(illumina_data)} samples")
+import csv
+import pandas as pd
+import re
+
+
+# Functions
+def id_basename(sample_id, delimiter='-'):
+    escaped_delim = re.escape(delimiter)
+    pattern = rf"(?<![A-Za-z]){escaped_delim}"
+    sample = re.split(pattern, sample_id)[0]
+    return sample
+
+# Read ONT samplesheet
+ont = pd.read_csv(${ont_samplesheet})
+ont['sample_ont'] = ont['sample']
+len_ont = len(ont['sample'])
+ont['sample'] = ont['sample'].apply(lambda x: id_basename(x))
+
+
+# Read Illumina reads
+illumina = pd.read_csv(${illumina_reads})
+illumina['sample_illumina'] = illumina['sample']
+len_illumina= len(illumina['sample'])
+illumina['sample'] = illumina['sample'].apply(lambda x: id_basename(x))
+
+
+# Merge and write output
+merged = ont.merge(illumina, on="sample", how="outer")
+merged['basename'] = merged['sample']
+merged['sample'] = merged['sample_ont']+"--" +merged['sample_illumina']
+merged = merged.dropna(subset=['fastq_2'])
+unique_ont = len(set(merged['sample_ont'].tolist()))
+merged = merged[['sample', 'fastq', 'fastq_1', 'fastq_2']]
+merged.to_csv('samplesheet.csv', index=False)
+
+
+# Display result
+print( f"\nCreated merged samplesheet with {len(merged['sample'])} samples")
+print(f"  - ONT reads: {unique_ont}/{len_ont} sample(s) are paired with illumina reads")
+print(f"  - Illumina reads: {len_illumina} sample(s) are paired with ont reads")
+
     """
 }
