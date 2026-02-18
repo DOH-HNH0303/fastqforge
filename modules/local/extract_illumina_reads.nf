@@ -1,4 +1,6 @@
 process EXTRACT_ILLUMINA_READS {
+    publishDir params.outdir, mode: 'copy'
+
     input:
     path ont_samplesheet
     path meta_fastq_csv
@@ -54,7 +56,7 @@ process EXTRACT_ILLUMINA_READS {
         .pivot_table(index='id_alt', columns='read', values='current', aggfunc='first')
         .reindex(columns=['R1', 'R2'])
     )
-
+    
     illumina_reads = illumina.to_dict(orient='index')
 
     illumina.index.name = "sample"
@@ -67,13 +69,15 @@ process EXTRACT_ILLUMINA_READS {
     missing_r1 = illumina[illumina["fastq_1"].isna() & illumina["fastq_2"].notna()]
     missing_r2 = illumina[illumina["fastq_2"].isna() & illumina["fastq_1"].notna()]
 
+    
+
     for sample in missing_r1["sample"]:
         print(f"WARNING: Sample {sample} has R2 but missing R1", file=sys.stderr)
 
     for sample in missing_r2["sample"]:
         print(f"WARNING: Sample {sample} has R1 but missing R2", file=sys.stderr)
 
-    df.to_csv("illumina_reads.csv", sep=",", index=False)
+    illumina.to_csv("illumina_reads.csv", sep=",", index=False)
 
     
     # Count matched samples
@@ -84,14 +88,6 @@ process EXTRACT_ILLUMINA_READS {
         print("WARNING: No matching Illumina reads found for any ONT samples", file=sys.stderr)
     
     # Display preview
-    print("\\n=== Illumina Reads Preview ===")
-    with open('illumina_reads.csv', 'r') as f:
-        for i, line in enumerate(f):
-            if i < 10:
-                print(line.rstrip())
-            else:
-                break
-        if matched_count > 9:
-            print(f"... ({matched_count} total samples)")
+    print(f'matched {len(illumina)}) illumina reads to ont')
     """
 }
