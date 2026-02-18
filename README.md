@@ -1,5 +1,5 @@
-# DOH-HNH0303/ont-samplesheet-generator
-
+# DOH-HNH0303/fastqforge
+FASTQ Organization for Read Grouping and Enumeration - a samplesheet generator!
 ## Introduction
 
 **DOH-HNH0303/ont-samplesheet-generator** is a bioinformatics pipeline that ...
