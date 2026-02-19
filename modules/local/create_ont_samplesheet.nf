@@ -33,12 +33,13 @@ process CREATE_ONT_SAMPLESHEET {
         fi
         
         # Create samplesheet with S3 paths (CSV format)
-        echo "sample,fastq" > ont_samplesheet.csv
+        echo "sample,sample_id,fastq" > ont_samplesheet.csv
         while IFS= read -r filename; do
             # Extract sample ID (everything before -runid.fastq.gz)
             sample_id=\$(echo "\${filename}" | sed -E "s/-\${runid}\\.fastq\\.gz\$//")
+            sample="\${sample_id}-\${runid}"
             full_path="\${search_path}\${filename}"
-            echo "\${sample_id},\${full_path}" >> ont_samplesheet.csv
+            echo "\${sample},\${sample_id},\${full_path}" >> ont_samplesheet.csv
         done < filelist.txt
         
     elif [[ "\${ont_bucket}" == gs://* ]]; then
@@ -52,11 +53,12 @@ process CREATE_ONT_SAMPLESHEET {
         fi
         
         # Create samplesheet with GCS paths (CSV format)
-        echo "sample,fastq" > ont_samplesheet.csv
+        echo "sample,sample_id,fastq" > ont_samplesheet.csv
         while IFS= read -r filename; do
             sample_id=\$(echo "\${filename}" | sed -E "s/-\${runid}\\.fastq\\.gz\$//")
+            sample="\${sample_id}-\${runid}"
             full_path="\${search_path}\${filename}"
-            echo "\${sample_id},\${full_path}" >> ont_samplesheet.csv
+            echo "\${sample},\${sample_id},\${full_path}" >> ont_samplesheet.csv
         done < filelist.txt
         
     else
@@ -70,11 +72,12 @@ process CREATE_ONT_SAMPLESHEET {
         fi
         
         # Create samplesheet with full local paths (CSV format)
-        echo "sample,fastq" > ont_samplesheet.csv
+        echo "sample,sample_id,fastq" > ont_samplesheet.csv
         while IFS= read -r filepath; do
             filename=\$(basename "\${filepath}")
             sample_id=\$(echo "\${filename}" | sed -E "s/-\${runid}\\.fastq\\.gz\$//")
-            echo "\${sample_id},\${filepath}" >> ont_samplesheet.csv
+            sample="\${sample_id}-\${runid}"
+            echo "\${sample},\${sample_id},\${filepath}" >> ont_samplesheet.csv
         done < filelist.txt
     fi
     

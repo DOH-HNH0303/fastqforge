@@ -26,7 +26,7 @@ process EXTRACT_ILLUMINA_READS {
         pattern = rf"(?<![A-Za-z]){escaped_delim}"
         sample = re.split(pattern, sample_id)[0]
         return sample
-
+ 
 
     df = pd.read_csv('${ont_samplesheet}')
     ont_sample = df['sample'].tolist()
@@ -57,6 +57,7 @@ process EXTRACT_ILLUMINA_READS {
         .reindex(columns=['R1', 'R2'])
     )
     
+    
     illumina_reads = illumina.to_dict(orient='index')
 
     illumina.index.name = "sample"
@@ -64,6 +65,13 @@ process EXTRACT_ILLUMINA_READS {
 
     # Rename columns to match your desired output
     illumina = illumina.rename(columns={"R1": "fastq_1", "R2": "fastq_2"})
+
+    run_id = []
+    for i in illumina['fastq_1'].tolist():
+        print(i)
+        #print(meta_fastq.columns)
+        run_id.append(meta_fastq.loc[meta_fastq['current'] == i, 'run'].tolist()[0])
+    illumina['illumina_run_id'] = run_id
 
     # Emit warnings for missing pairs
     missing_r1 = illumina[illumina["fastq_1"].isna() & illumina["fastq_2"].notna()]

@@ -24,6 +24,10 @@ def id_basename(sample_id, delimiter='-'):
     sample = re.split(pattern, sample_id)[0]
     return sample
 
+def ont_runname(fastq):
+    fastq_run = fastq.split("run/")[1].split("/")[0]
+
+
 # Read ONT samplesheet
 ont = pd.read_csv('${ont_samplesheet}')
 ont['sample_ont'] = ont['sample']
@@ -42,7 +46,7 @@ print(illumina.columns)
 # Merge and write output
 merged = ont.merge(illumina, on="sample", how="outer")
 merged['basename'] = merged['sample']
-merged['sample'] = merged['sample_ont']+"--" +merged['sample_illumina']
+merged['sample'] = merged['sample_ont']+"--" +merged['sample_illumina']+"-"+merged['illumina_run_id']
 print(merged.columns)
 merged = merged.dropna(subset=['fastq_2'])
 unique_ont = len(set(merged['sample_ont'].tolist()))
