@@ -22,9 +22,13 @@ process EXTRACT_ILLUMINA_READS {
 
     ############################
     def id_basename(sample_id, delimiter='-'):
-        escaped_delim = re.escape(delimiter)
-        pattern = rf"(?<![A-Za-z]){escaped_delim}"
-        sample = re.split(pattern, sample_id)[0]
+        pattern = r"^\\d{2}[A-Za-z]{2}\\d{2}"
+        if bool(re.match(pattern, sample_id)):
+            sample = "-".join(re.split(pattern, sample_id)[0:1])
+        else:
+            escaped_delim = re.escape(delimiter)
+            pattern = rf"(?<![A-Za-z]){escaped_delim}"
+            sample = re.split(pattern, sample_id)[0]
         return sample
  
 
