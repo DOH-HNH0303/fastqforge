@@ -24,8 +24,19 @@ def id_basename(sample_id, delimiter='-'):
     sample = re.split(pattern, sample_id)[0]
     return sample
 
-def ont_runname(fastq):
-    fastq_run = fastq.split("run/")[1].split("/")[0]
+def id_modifier(sample_id, delimiter='-'):
+    sample_base = id_basename(sample_id)
+    sample_mod =sample_id.replace(f"{sample_base}", "")
+    print("sample_mod", sample_mod, sample_base, sample_id)
+    return sample_mod
+
+# def ont_runname(fastq):
+#     fastq_run = fastq.split("run/")[1].split("/")[0]
+
+def clean_name(value):
+    value = value.replace("---", "--")
+    return value
+
 
 
 # Read ONT samplesheet
@@ -46,9 +57,14 @@ print(illumina.columns)
 # Merge and write output
 merged = ont.merge(illumina, on="sample", how="outer")
 merged['basename'] = merged['sample']
-merged['sample'] = merged['sample_ont']+"--" +merged['sample_illumina']+"-"+merged['illumina_run_id']
-print(merged.columns)
+print(merged['sample_illumina'])
+
 merged = merged.dropna(subset=['fastq_2'])
+merged['modifier_illumina'] = merged['sample_illumina'].apply(lambda x: id_modifier(x))
+merged['sample'] = merged['sample_ont']+"--" +merged['modifier_illumina']+"-"+merged['illumina_run_id']
+merged['sample'] = merged['sample'].apply(lambda x: clean_name(x))
+
+
 unique_ont = len(set(merged['sample_ont'].tolist()))
 merged = merged[['sample', 'fastq', 'fastq_1', 'fastq_2']]
 merged.to_csv('samplesheet.csv', index=False)
