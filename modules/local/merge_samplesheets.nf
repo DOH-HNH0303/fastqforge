@@ -72,6 +72,7 @@ merged['sample'] = merged['sample'].apply(lambda x: clean_name(x))
 
 unique_ont = len(set(merged['sample_ont'].tolist()))
 merged = merged[['sample', 'fastq', 'fastq_1', 'fastq_2']]
+merged.drop(merged[merged[merged.columns[0]] == "unclassified"].index, inplace=True)
 merged.to_csv('samplesheet.csv', index=False)
 
 
