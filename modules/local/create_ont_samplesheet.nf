@@ -113,9 +113,9 @@ process CREATE_ONT_SAMPLESHEET {
     
     
     def create_samplesheet(runid, ont_bucket):
-        search_path = f"{ont_bucket}/{runid}/reads/"
+        search_path = f"{ont_bucket}/{runid}/"
         print(f"Searching for ONT FASTQ files in: {search_path}")
-        
+        print(search_path)
         files = []
         is_s3 = ont_bucket.startswith('s3://')
         is_gcs = ont_bucket.startswith('gs://')
